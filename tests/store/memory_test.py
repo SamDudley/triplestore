@@ -2,7 +2,7 @@ import pytest
 
 from triplestore.store.memory import MemoryStore
 from triplestore.triple import Triple
-from triplestore.query import Query
+from triplestore.query import Query, Clause, Type
 
 
 @pytest.fixture
@@ -25,11 +25,22 @@ def test_duplicate_insert(store):
     assert len(store.memory) == 1
 
 
-def test_query(store):
+def test_any_query(store):
     triple = Triple('Sam', 'loves', 'Sam', 1.0)
     store.insert(triple)
 
     all_query = Query()
+
+    results = list(store.query(all_query))
+
+    assert len(results) == 1
+
+
+def test_one_query(store):
+    store.insert(Triple('Sam', 'loves', 'Sam', 1.0))
+    store.insert(Triple('Sam', 'owns', 'Car', 1.0))
+
+    all_query = Query(predicate=Clause(type=Type.EQ, value='loves'))
 
     results = list(store.query(all_query))
 

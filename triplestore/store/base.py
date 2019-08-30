@@ -1,3 +1,5 @@
+from typing import Iterable
+
 from abc import ABC
 
 from triplestore.triple import Triple
@@ -8,8 +10,8 @@ class Store(ABC):
     def insert(self, triple: Triple):
         raise NotImplementedError
 
-    def query(self, query: Query):
+    def query(self, query: Query) -> Iterable[Triple]:
         raise NotImplementedError
 
-    def delete(self, query: Query):
+    def delete(self, query: Query) -> int:
         raise NotImplementedError

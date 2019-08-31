@@ -40,8 +40,20 @@ def test_one_query(store):
     store.insert(Triple('Sam', 'loves', 'Sam', 1.0))
     store.insert(Triple('Sam', 'owns', 'Car', 1.0))
 
-    all_query = Query(predicate=Clause(type=Type.EQ, value='loves'))
+    query = Query(predicate=Clause(type=Type.EQ, value='loves'))
 
-    results = list(store.query(all_query))
+    results = list(store.query(query))
 
     assert len(results) == 1
+
+
+def test_delete(store):
+    store.insert(Triple('Sam', 'loves', 'Sam', 1.0))
+    store.insert(Triple('Sam', 'owns', 'Car', 1.0))
+
+    query = Query(predicate=Clause(type=Type.EQ, value='owns'))
+
+    results = store.delete(query)
+
+    assert results == 1
+    assert len(store.memory) == 1

@@ -1,4 +1,4 @@
-from typing import Set, Iterable
+from typing import Set, Iterable, List
 
 from .base import Store
 
@@ -11,6 +11,7 @@ class MemoryStore(Store):
         self.memory: Set[Triple] = set()
 
     def insert(self, triple: Triple):
+        # TODO: should we throw an error if we try to insert a dupe?
         self.memory.add(triple)
 
     def query(self, query: Query) -> Iterable[Triple]:
@@ -23,11 +24,27 @@ class MemoryStore(Store):
 
             if query.is_any():
                 yield triple
+                count += 1
             elif is_match(triple, query):
                 yield triple
+                count += 1
 
-    def delete(self, query: Query):
-        raise NotImplementedError
+    def delete(self, query: Query) -> int:
+        to_be_removed: List[Triple] = []
+
+        for triple in self.memory:
+            if query.limit > 0 and len(to_be_removed) >= query.limit:
+                continue
+
+            if query.is_any():
+                to_be_removed.append(triple)
+            elif is_match(triple, query):
+                to_be_removed.append(triple)
+
+        for triple in to_be_removed:
+            self.memory.remove(triple)
+
+        return len(to_be_removed)
 
 
 def is_match(triple: Triple, query: Query) -> bool:

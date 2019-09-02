@@ -10,7 +10,7 @@ class MemoryStore(Store):
     def __init__(self):
         self.memory: Set[Triple] = set()
 
-    def insert(self, triple: Triple):
+    def insert(self, triple: Triple) -> None:
         # TODO: should we throw an error if we try to insert a dupe?
         self.memory.add(triple)
 

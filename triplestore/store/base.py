@@ -7,7 +7,7 @@ from triplestore.query import Query
 
 
 class Store(ABC):
-    def insert(self, triple: Triple):
+    def insert(self, triple: Triple) -> None:
         raise NotImplementedError
 
     def query(self, query: Query) -> Iterable[Triple]:

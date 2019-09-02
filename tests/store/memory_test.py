@@ -1,3 +1,5 @@
+from typing import Set
+
 import pytest
 
 from triplestore.store.memory import MemoryStore
@@ -5,55 +7,63 @@ from triplestore.triple import Triple
 from triplestore.query import Query, Clause, Type
 
 
+TEST_TRIPLES: Set[Triple] = set([
+    Triple('Sam', 'knows', 'Jack', 1.0),
+    Triple('Sam', 'knows', 'Matt', 1.0),
+    Triple('Sam', 'knows', 'Dan', 1.0),
+    Triple('Sam', 'works_with', 'Jack', 1.0),
+    Triple('Sam', 'works_with', 'Dan', 1.0),
+])
+
+
 @pytest.fixture
 def store():
-    return MemoryStore()
+    store = MemoryStore()
+
+    for triple in TEST_TRIPLES:
+        store.insert(triple)
+
+    return store
+
+
+def test_count(store):
+    assert store.count() == len(TEST_TRIPLES)
 
 
 def test_insert(store):
-    triple = Triple('Sam', 'loves', 'Sam', 1.0)
-    store.insert(triple)
+    store.insert(Triple('Jack', 'knows', 'Matt', 1.0))
 
-    assert len(store.memory) == 1
+    assert store.count() == (len(TEST_TRIPLES) + 1)
 
 
 def test_duplicate_insert(store):
-    triple = Triple('Sam', 'loves', 'Sam', 1.0)
+    triple = Triple('Jack', 'knows', 'Dan', 1.0)
     store.insert(triple)
     store.insert(triple)
 
-    assert len(store.memory) == 1
+    assert store.count() == (len(TEST_TRIPLES) + 1)
 
 
 def test_any_query(store):
-    triple = Triple('Sam', 'loves', 'Sam', 1.0)
-    store.insert(triple)
-
     all_query = Query()
 
     results = list(store.query(all_query))
 
-    assert len(results) == 1
+    assert len(results) == len(TEST_TRIPLES)
 
 
-def test_one_query(store):
-    store.insert(Triple('Sam', 'loves', 'Sam', 1.0))
-    store.insert(Triple('Sam', 'owns', 'Car', 1.0))
-
-    query = Query(predicate=Clause(type=Type.EQ, value='loves'))
+def test_eq_query(store):
+    query = Query(predicate=Clause(type=Type.EQ, value='knows'))
 
     results = list(store.query(query))
 
-    assert len(results) == 1
+    assert len(results) == 3
 
 
 def test_delete(store):
-    store.insert(Triple('Sam', 'loves', 'Sam', 1.0))
-    store.insert(Triple('Sam', 'owns', 'Car', 1.0))
-
-    query = Query(predicate=Clause(type=Type.EQ, value='owns'))
+    query = Query(predicate=Clause(type=Type.EQ, value='works_with'))
 
     results = store.delete(query)
 
-    assert results == 1
-    assert len(store.memory) == 1
+    assert results == 2
+    assert len(store.memory) == 3

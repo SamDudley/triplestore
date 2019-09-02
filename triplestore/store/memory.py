@@ -46,6 +46,9 @@ class MemoryStore(Store):
 
         return len(to_be_removed)
 
+    def count(self) -> int:
+        return len(self.memory)
+
 
 def is_match(triple: Triple, query: Query) -> bool:
     all_clauses_match = all([

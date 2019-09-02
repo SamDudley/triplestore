@@ -15,3 +15,6 @@ class Store(ABC):
 
     def delete(self, query: Query) -> int:
         raise NotImplementedError
+
+    def count(self) -> int:
+        raise NotImplementedError

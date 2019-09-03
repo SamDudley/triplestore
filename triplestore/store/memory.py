@@ -1,13 +1,13 @@
 from typing import Set, Iterable, List
 
-from .base import Store
-
 from triplestore.triple import Triple
 from triplestore.query import Query, Clause, Type
 
+from .base import Store
+
 
 class MemoryStore(Store):
-    def __init__(self):
+    def __init__(self) -> None:
         self.memory: Set[Triple] = set()
 
     def insert(self, triple: Triple) -> None:

@@ -1,4 +1,4 @@
-from typing import Iterable
+from typing import Iterable, List, Tuple, Any, Optional
 
 from triplestore.triple import Triple
 from triplestore.query import Query, Clause, Type
@@ -6,7 +6,7 @@ from triplestore.query import Query, Clause, Type
 from .base import Store
 
 
-CREATE_TABLE_SQL: str = """
+CREATE_TABLE_SQL = """
     CREATE TABLE IF NOT EXISTS triple (
         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
         source TEXT NOT NULL,
@@ -36,7 +36,18 @@ class SqlStore(Store):
         self.conn.execute(query, values)
 
     def query(self, query: Query) -> Iterable[Triple]:
-        raise NotImplementedError
+        sql = 'SELECT * FROM triple'
+
+        where, args = where_clause(query)
+        if where:
+            sql += f' WHERE {where}'
+
+        if query.limit > 0:
+            sql += ' LIMIT ?'
+            args.append(query.limit)
+
+        for row in self.conn.execute(sql, args):
+            yield row
 
     def delete(self, query: Query) -> int:
         raise NotImplementedError
@@ -51,3 +62,40 @@ class SqlStore(Store):
 
     def setup(self) -> None:
         self.conn.executescript(CREATE_TABLE_SQL)
+
+
+def where_clause(query: Query) -> Tuple[str, List[Any]]:
+    where: List[str] = []
+    args: List[Any] = []
+
+    column_clause = [
+        ('source', query.source),
+        ('predicate', query.predicate),
+        ('target', query.target),
+    ]
+
+    for column, clause in column_clause:
+        if not clause.is_any():
+            sql_op, value = clause_to_sql(clause)
+
+            where.append(f'{column} {sql_op} ?')
+            args.append(value)
+
+    return ' AND '.join(where), args
+
+
+# FIXME:
+# - `Optional[str]` because that is what `clause.Value` is.
+# - Look into a better way to express this.
+# - mypy catching this raises a good point about validating clauses.
+# - Easy to do at runtime, however look into being able to express this
+#   in the type system.
+# - Perhaps this is correct here though, and other code should be aware.
+# - I wonder if mypy would understand if we put logic in around this.
+# - Or would I need to express it in a type.
+def clause_to_sql(clause: Clause) -> Tuple[str, Optional[str]]:
+    if clause.type == Type.EQ:
+        return '=', clause.value
+    else:
+        # FIXME: use a better exception
+        raise Exception('Unsupported clause')

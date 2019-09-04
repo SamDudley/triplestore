@@ -48,3 +48,19 @@ def test_insert(store):
     store.insert(Triple('Jack', 'knows', 'Matt', 1.0))
 
     assert store.count() == (len(TEST_TRIPLES) + 1)
+
+
+def test_any_query(store):
+    all_query = Query()
+
+    results = list(store.query(all_query))
+
+    assert len(results) == len(TEST_TRIPLES)
+
+
+def test_eq_query(store):
+    query = Query(predicate=Clause(type=Type.EQ, value='knows'))
+
+    results = list(store.query(query))
+
+    assert len(results) == 3

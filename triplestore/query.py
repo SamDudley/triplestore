@@ -5,16 +5,17 @@ from enum import Enum
 
 
 class Type(Enum):
+    ANY = ''
     EQ = '='
 
 
 @dataclass
 class Clause:
-    type: Optional[Type] = None
-    value: Optional[str] = None
+    type: Type = Type.ANY
+    value: str = ''
 
     def is_any(self) -> bool:
-        return self.type is None and self.value is None
+        return self.type == Type.ANY
 
 
 @dataclass

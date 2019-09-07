@@ -1,4 +1,4 @@
-from typing import Iterable, List, Tuple, Any, Optional
+from typing import Iterable, List, Tuple, Any
 
 from triplestore.triple import Triple
 from triplestore.query import Query, Clause, Type
@@ -66,7 +66,7 @@ class SqlStore(Store):
 
 def where_clause(query: Query) -> Tuple[str, List[Any]]:
     where: List[str] = []
-    args: List[Any] = []
+    args: List[str] = []
 
     column_clause = [
         ('source', query.source),
@@ -75,11 +75,12 @@ def where_clause(query: Query) -> Tuple[str, List[Any]]:
     ]
 
     for column, clause in column_clause:
-        if not clause.is_any():
-            sql_op, value = clause_to_sql(clause)
+        if clause.is_any():
+            continue
 
-            where.append(f'{column} {sql_op} ?')
-            args.append(value)
+        sql_op, value = clause_to_sql(clause)
+        where.append(f'{column} {sql_op} ?')
+        args.append(value)
 
     return ' AND '.join(where), args
 
@@ -93,7 +94,7 @@ def where_clause(query: Query) -> Tuple[str, List[Any]]:
 # - Perhaps this is correct here though, and other code should be aware.
 # - I wonder if mypy would understand if we put logic in around this.
 # - Or would I need to express it in a type.
-def clause_to_sql(clause: Clause) -> Tuple[str, Optional[str]]:
+def clause_to_sql(clause: Clause) -> Tuple[str, str]:
     if clause.type == Type.EQ:
         return '=', clause.value
     else:

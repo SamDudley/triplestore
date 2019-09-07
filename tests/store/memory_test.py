@@ -66,4 +66,4 @@ def test_delete(store):
     results = store.delete(query)
 
     assert results == 2
-    assert len(store.memory) == 3
+    assert store.count() == 3

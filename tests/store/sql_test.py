@@ -64,3 +64,12 @@ def test_eq_query(store):
     results = list(store.query(query))
 
     assert len(results) == 3
+
+
+def test_delete(store):
+    query = Query(predicate=Clause(type=Type.EQ, value='works_with'))
+
+    results = store.delete(query)
+
+    assert results == 2
+    assert store.count() == 3

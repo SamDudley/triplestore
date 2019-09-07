@@ -50,7 +50,17 @@ class SqlStore(Store):
             yield row
 
     def delete(self, query: Query) -> int:
-        raise NotImplementedError
+        sql = 'DELETE FROM triple'
+
+        where, args = where_clause(query)
+        if where:
+            sql += f' WHERE {where}'
+
+        if query.limit > 0:
+            sql += ' LIMIT ?'
+            args.append(query.limit)
+
+        return self.conn.execute(sql, args).rowcount
 
     def count(self) -> int:
         query = 'SELECT count(*) FROM triple'

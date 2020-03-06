@@ -1,5 +1,7 @@
 from typing import Set, Iterable, List
 
+from triplestore.exceptions import DuplicateError
+
 from triplestore.triple import Triple
 from triplestore.query import Query, Clause, Type
 
@@ -11,7 +13,9 @@ class MemoryStore(Store):
         self.memory: Set[Triple] = set()
 
     def insert(self, triple: Triple) -> None:
-        # TODO: should we throw an error if we try to insert a dupe?
+        if triple in self.memory:
+            raise DuplicateError
+
         self.memory.add(triple)
 
     def query(self, query: Query) -> Iterable[Triple]:

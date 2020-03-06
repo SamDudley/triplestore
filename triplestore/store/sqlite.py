@@ -1,5 +1,8 @@
 from typing import Iterable, List, Tuple, Any
 
+import sqlite3
+
+from triplestore.exceptions import DuplicateError
 from triplestore.triple import Triple
 from triplestore.query import Query, Clause, Type
 
@@ -19,7 +22,7 @@ CREATE_TABLE_SQL = """
 """
 
 
-class SqlStore(Store):
+class SqliteStore(Store):
     def __init__(self, conn) -> None:
         self.conn = conn
 
@@ -33,7 +36,10 @@ class SqlStore(Store):
             triple.source, triple.predicate, triple.target, triple.weight
         )
 
-        self.conn.execute(query, values)
+        try:
+            self.conn.execute(query, values)
+        except sqlite3.IntegrityError:
+            raise DuplicateError
 
     def query(self, query: Query) -> Iterable[Triple]:
         sql = 'SELECT * FROM triple'
@@ -70,8 +76,9 @@ class SqlStore(Store):
 
         return cur.fetchone()[0]
 
-    def setup(self) -> None:
-        self.conn.executescript(CREATE_TABLE_SQL)
+    @staticmethod
+    def setup(conn) -> None:
+        conn.executescript(CREATE_TABLE_SQL)
 
 
 def where_clause(query: Query) -> Tuple[str, List[Any]]:
